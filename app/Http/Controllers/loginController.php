@@ -60,7 +60,12 @@ class loginController extends Controller
                 ->count();
 
 
-                $notificaciones = notificacion::where('idUsuario', $user->id)->get();
+                $notificaciones = DB::table('notificacions as n')
+                ->join('amistads as a', 'n.idAmistad', '=', 'a.id')
+                ->join('usuarios as u', 'u.id', '=', 'a.idUsuario2')
+                ->select('n.*', 'u.nombre as NombreSolicitud')
+                ->get();
+
 
                 return response()->json([
                     "status" => 1,
