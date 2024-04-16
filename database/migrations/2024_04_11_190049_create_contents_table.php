@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('contents', function (Blueprint $table) {
             $table->id();
             $table->string('dirContent');
-            $table->foreignId('ídPublicacion')->constrained('publicacions')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreignId('idPublicacion')->constrained('publicacions')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
         });
     }

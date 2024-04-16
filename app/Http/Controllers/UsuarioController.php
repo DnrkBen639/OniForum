@@ -3,12 +3,27 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use App\Models\publicacion;
 use App\Models\notificacion;
 use App\Models\usuario;
 
+
+
 class UsuarioController extends Controller
 {
+    public function manejarImagenes($file){
+        $nameFile = uniqid();
+        $extensionFile = '.' . $file->getClientOriginalExtension();
+        $file->storeAs('public/',$nameFile.$extensionFile);
+        $storageRoute = storage_path('app/public/'.$nameFile.$extensionFile);
+        $publicRoute = public_path('perfiles/'.$nameFile.$extensionFile);
+        File::move($storageRoute,$publicRoute);
+        Storage::delete($storageRoute);
+        return $nameFile.$extensionFile;
+    }
+
     public function userProfile(){
 
         $user = auth()->user();
@@ -36,10 +51,12 @@ class UsuarioController extends Controller
 
         try {
             
-            $user->dirFoto = manejarImagenes($request->foto);
+            $user->dirFoto = $this->manejarImagenes($request->foto);
         } catch (\Exception $e) {
             
-            return response()->json(['error' => 'No se pudo actualizar la foto de perfil'], 500);
+            return response()->
+            json(['error' => 'No se pudo actualizar la foto de perfil',
+                                     'errors' => $e], 500);
         }
         
         $user->save();
@@ -55,14 +72,5 @@ class UsuarioController extends Controller
 
     }
 
-    public function manejarImagenes($file){
-        $nameFile = uniqid();
-        $extensionFile = '.' . $file->getClientOriginalExtension();
-        $file->storeAs('public/',$nameFile.$extensionFile);
-        $storageRoute = storage_path('app/public/'.$nameFile.$extensionFile);
-        $publicRoute = public_path('perfiles/'.$nameFile.$extensionFile);
-        File::move($storageRoute,$publicRoute);
-        Storage::delete($storageRoute);
-        return $nameFile.$extensionFile;
-    }
+    
 }

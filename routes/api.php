@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use  App\Http\Controllers\loginController;
 use  App\Http\Controllers\UsuarioController;
+use  App\Http\Controllers\PublicacionController;
 
 Route::post('register', [loginController::class, 'register']);
 
@@ -17,6 +18,10 @@ Route::group( ['middleware' => ["auth:sanctum"]], function () {
 
     Route::post('updateImage', [UsuarioController::class, 'PhotoUpdate']);
 
-    
+    Route::post('Publicar', [PublicacionController::class, 'Publicar']);
+
+    Route::post('readRequest', [PublicacionController::class, 'readRequest']);
+
+    Route::post('openPost', [PublicacionController::class, 'openPost']);
 
 });
