@@ -11,6 +11,7 @@ use App\Models\usuario;
 
 
 
+
 class UsuarioController extends Controller
 {
     public function manejarImagenes($file){
@@ -44,14 +45,18 @@ class UsuarioController extends Controller
     public function PhotoUpdate(Request $request){
         
         $request->validate([
-            'foto' => 'required|image',
+            'foto' => 'required|image|mimes:jpg,png,jpeg,gif,svg|max:2048'
         ]);
 
         $user = auth()->user();
 
+        if (File::exists(public_path($user->dirFoto))) {
+            File::delete(public_path($imagePath));
+        }
+
         try {
-            
             $user->dirFoto = $this->manejarImagenes($request->foto);
+            $user->extension = $request->foto->getClientOriginalExtension();
         } catch (\Exception $e) {
             
             return response()->

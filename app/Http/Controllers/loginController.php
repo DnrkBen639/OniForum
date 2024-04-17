@@ -48,8 +48,11 @@ class loginController extends Controller
                 //Crear token
                 $token = $user->createToken("auth_token")->plainTextToken;
 
-                $IdAmigos = amistad::select('idusuario2')->where('idusuario1', '=', $user->id)->where('aceptado', '=', 1)->get();
-        
+                $IdAmigos1 = amistad::where('idusuario1', '=', $user->id)->where('aceptado', '=', 1)->pluck('idusuario2');
+                $IdAmigos2 = amistad::where('idusuario2', '=', $user->id)->where('aceptado', '=', 1)->pluck('idusuario1');
+                $IdAmigos = $IdAmigos1->concat($IdAmigos2);
+                $IdAmigos[] = $user->id;
+
                 $publicacions = publicacion::leftJoin('likes AS l', 'publicacions.id', '=', 'l.idPublicacion')
                 ->join('usuarios AS u', 'publicacions.idUsuario', '=', 'u.id')
                 ->select('u.nombre', 'publicacions.titulo', 'publicacions.descripcion', 'publicacions.created_at', 'publicacions.updated_at', DB::raw('COUNT(l.id) AS num_likes'))
@@ -63,7 +66,7 @@ class loginController extends Controller
                 $notificaciones = DB::table('notificacions as n')
                 ->join('amistads as a', 'n.idAmistad', '=', 'a.id')
                 ->join('usuarios as u', 'u.id', '=', 'a.idUsuario2')
-                ->select('n.*', 'u.nombre as NombreSolicitud')
+                ->select('n.*', 'u.nombre as NombreSolicitud')->where('n.idUsuario', '=', $user->id)
                 ->get();
 
 
@@ -92,6 +95,40 @@ class loginController extends Controller
 
     }
 
+    public function Feed(){
+        $user = auth() -> user();
+
+                $IdAmigos1 = amistad::where('idusuario1', '=', $user->id)->where('aceptado', '=', 1)->pluck('idusuario2');
+                $IdAmigos2 = amistad::where('idusuario2', '=', $user->id)->where('aceptado', '=', 1)->pluck('idusuario1');
+                $IdAmigos = $IdAmigos1->concat($IdAmigos2);
+                $IdAmigos[] = $user->id;
+
+                $publicacions = publicacion::leftJoin('likes AS l', 'publicacions.id', '=', 'l.idPublicacion')
+                ->join('usuarios AS u', 'publicacions.idUsuario', '=', 'u.id')
+                ->select('u.nombre', 'publicacions.titulo', 'publicacions.descripcion', 'publicacions.created_at', 'publicacions.updated_at', DB::raw('COUNT(l.id) AS num_likes'))
+                ->groupBy('u.nombre', 'publicacions.titulo', 'publicacions.descripcion', 'publicacions.created_at', 'publicacions.updated_at')
+                ->whereIn('publicacions.idusuario', $IdAmigos)->get();
+                
+                $numNotificaciones = notificacion::where('idUsuario', '=', $user->id)
+                ->count();
+
+
+                $notificaciones = DB::table('notificacions as n')
+                ->join('amistads as a', 'n.idAmistad', '=', 'a.id')
+                ->join('usuarios as u', 'u.id', '=', 'a.idUsuario2')
+                ->select('n.*', 'u.nombre as NombreSolicitud')->where('n.idUsuario', '=', $user->id)
+                ->get();
+
+
+                return response()->json([
+                    "status" => 1,
+                    "msg" => "Okay",
+                    "UserInfo"=>$user,
+                    "NumNotificaciones"=>$numNotificaciones,
+                    "Notificaciones"=>$notificaciones,
+                    "Publicacions"=>$publicacions
+                ]);
+    }
     
 
 }
